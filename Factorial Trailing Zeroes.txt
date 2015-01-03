@@ -1,0 +1,9 @@
+solved less than a minute
+
+5 gives 1 five
+10 gives 1 five
+15 gives 1 five
+...
+25 gives 2 five (every 25)
+...
+125 gives 3 five (every 125)
