@@ -1,0 +1,48 @@
+Stack
+
+C++
+vector<int>
+	empty()
+	size()
+	push_back(n)
+	pop_back()
+	back()		// return int&
+	[i]
+
+Java
+
+no pop (eg. caches)
+
+List<Integer>	// abstract; imp: ArrayList, LinkedList, Stack, Vector http://docs.oracle.com/javase/7/docs/api/java/util/List.html
+	add(e)
+	remove(e)
+	remove(i)
+	add(i, e)
+	get(i)
+	set(i, e)
+	contains(e)
+	size()
+	isEmpty()
+	toArray()
+
+LinkedList<Integer>
+
+ArrayList<Integer>
+	add(new Integer(n))
+	isEmpty()
+	get(i)
+	size()
+
+no random access 
+ArrayDeque<E>	eg. Binary Search Tree Iterator.java
+	push(e)
+	pop()		// return E
+	peek()		// return E
+	isEmpty()
+	
+Python
+[]	// list in fact
+	append(e)
+	pop(i)
+	[i]
+	len(Array)
