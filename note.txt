@@ -8,7 +8,7 @@ vector<int>
 	pop_back()
 	back()		// return int&
 	[i]
-
+	
 Java
 
 no pop (eg. caches)
