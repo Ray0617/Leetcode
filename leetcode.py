@@ -15,8 +15,8 @@ import jsonpickle
 # >>> lc.fail()
 # >>> lc.accept()
 # or
-# >>> lc.accept(3)	# trial = 3
-# >>> lc.save("db.json")
+# >>> lc.accept(3)	# trial = 1
+# >>> lc.save("db.json") # jsonfile = "db.json"
 # wanna random suggestion? try:
 # >>> lc.random()
 # wanna check a list? try:
@@ -46,7 +46,7 @@ class LeetcodeProblem:
 	def score(self):
 		return 5 * self.duration.seconds / 60 + 10 * self.trial + (datetime.datetime.now() - self.accepted).seconds / 86400
 	def __str__(self):
-		return str(self.id) + ": " + self.title
+		return str(self.id) + ": " + self.title + "(" + str(self.duration.seconds / 60) + "/" + str(self.trial) + "/" + str((datetime.datetime.now() - self.accepted).seconds / 86400) + ")"
 class Leetcode:
 	def __init__(self, jsonfile = None):
 		self.index = {}
@@ -74,24 +74,24 @@ class Leetcode:
 		for prob in LeetcodeProblem.directory:
 			self.index[prob.id] = prob
 			self.index[prob.title] = prob
-	def load(self, jsonfile):
+	def load(self, jsonfile = "db.json"):
 		with open(jsonfile, "r") as f:
 			LeetcodeProblem.directory = jsonpickle.decode(f.read())
-	def save(self, jsonfile):
+	def save(self, jsonfile = "db.json"):
 		with open(jsonfile, "w") as f:
 			jstr = jsonpickle.encode(LeetcodeProblem.directory)
 			jobj = json.loads(jstr)
 			sys.stdout = f
 			print json.dumps(jobj, indent = 4)
 			sys.stdout = sys.__stdout__
-	def sort(self):
-		LeetcodeProblem.directory.sort(key=lambda x : x.score(), reverse = True)
+	def sort(self, reverse = True):
+		LeetcodeProblem.directory.sort(key=lambda x : x.score(), reverse = reverse)
 	def start(self, prob):
 		if prob in self.index:
 			self.prob = self.index[prob]
 		else:
 			# try find the matchest one
-			candidates = filter(lambda x : x.title.lower().count(prob.lower()), LeetcodeProblem.directory)
+			candidates = filter(lambda x : x.title.lower().count(prob[0:-1].lower()), LeetcodeProblem.directory)
 			if len(candidates) > 1:
 				ver = 1
 				if prob.endswith("IV") or prob.endswith("4"):
@@ -103,8 +103,15 @@ class Leetcode:
 				candidates = filter(lambda x : self.match(x.title, ver), candidates)
 			if len(candidates) > 1:
 				print "More than One candidates match..."
-				return
-			self.prob = candidates[0]
+				index = 0
+				for candidate in candidates:
+					print "(", index, ")", candidate
+					index += 1
+				sel = input("Enter an index: ")
+				self.prob = candidates[sel]
+			else:
+				self.prob = candidates[0]
+		print "Start the problem:", self.prob
 		self.start_time = datetime.datetime.now()
 		self.trial = 1
 	def fail(self):
@@ -124,8 +131,8 @@ class Leetcode:
 				print prob
 				return
 			r -= score
-	def list(self, head = 10):
-		self.sort()
+	def list(self, head = 10, reverse = True):
+		self.sort(reverse = reverse)
 		for i in range(head):
 			print LeetcodeProblem.directory[i]
 	def match(self, prob, ver):
