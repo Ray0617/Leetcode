@@ -15,12 +15,12 @@ import jsonpickle
 # >>> lc.fail()
 # >>> lc.accept()
 # or
-# >>> lc.accept(3)	# trial = 1
-# >>> lc.save("db.json") # jsonfile = "db.json"
+# >>> lc.accept(trial=3)
+# >>> lc.save(jsonfile="db.json")
 # wanna random suggestion? try:
 # >>> lc.random()
 # wanna check a list? try:
-# >>> lc.list([10])	# head = 10
+# >>> lc.list(head=10)	# head = 10
 
 class LeetcodeProblem:
 	directory = []
@@ -74,6 +74,25 @@ class Leetcode:
 		for prob in LeetcodeProblem.directory:
 			self.index[prob.id] = prob
 			self.index[prob.title] = prob
+	def reload(self, id):
+		conn = httplib.HTTPSConnection('leetcode.com')
+		conn.request("GET", "/problemset/algorithms/")
+		r = conn.getresponse()
+		msg = r.read()
+		m = re.search("<td>%d</td>" % id, msg)
+		msg = msg[m.end():]
+		m = re.search('">(.*)</a>', msg)
+		title = m.group(1)
+		m = re.search('<td>(\d\d\.\d)%</td>', msg)
+		acceptance = float(m.group(1))
+		m = re.search("<td value='\d'>(\w+)</td>", msg)
+		difficulty = m.group(1)
+		prob = LeetcodeProblem(id, title, acceptance, difficulty)
+		msg = msg[m.end():]
+		m = re.search('<td>(\d+)</td>', msg)
+		# in fact, it's possible to dig deeper for tag or description automatically
+		self.index[prob.id] = prob
+		self.index[prob.title] = prob
 	def load(self, jsonfile = "db.json"):
 		with open(jsonfile, "r") as f:
 			LeetcodeProblem.directory = jsonpickle.decode(f.read())
@@ -109,8 +128,11 @@ class Leetcode:
 					index += 1
 				sel = input("Enter an index: ")
 				self.prob = candidates[sel]
-			else:
+			elif len(candidates) == 1:
 				self.prob = candidates[0]
+			else:
+				print "Not found any candidate..."
+				return
 		print "Start the problem:", self.prob
 		self.start_time = datetime.datetime.now()
 		self.trial = 1
@@ -151,7 +173,7 @@ lc = None
 
 def main():
 	p = argparse.ArgumentParser()
-	p.add_argument("-f", "--jsonfile", help="the database file", default=None)
+	p.add_argument("-f", "--jsonfile", help="the database file", default='db.json')
 	args = p.parse_args()
 	global lc
 	lc = Leetcode(args.jsonfile)
