@@ -5,8 +5,7 @@ import httplib
 import re
 import datetime
 import random
-# installed
-import jsonpickle
+import json
 
 # usage:
 # >>> lc.start("skyline")
@@ -21,38 +20,73 @@ import jsonpickle
 # >>> lc.random()
 # wanna check a list? try:
 # >>> lc.list(head=10)	# head = 10
-
 class LeetcodeProblem:
 	directory = []
-	def __init__(self, id, title, acceptance = 0.0, difficulty = "Easy"):
+	def __init__(self):
 		# require
-		self.id = id
-		self.title = title
+		self.id = 0
+		self.title = ""
 		# optional
-		self.difficulty = difficulty
-		self.acceptance = acceptance
+		self.difficulty = "Easy"
+		self.acceptance = 0.0
 		# suggested
 		self.description = ""
 		self.category = "Algorithms"
 		self.language = "C++"
 		self.trial = 0
-		self.duration = datetime.timedelta(hours = 1)
+		self.duration = datetime.timedelta(hours = 24)
 		self.accepted = datetime.datetime.min
+		self.score = self.normalScore
 		LeetcodeProblem.directory.append(self)
 	def solve(self, duration, trial):
 		self.accpeted = datetime.datetime.now()
 		self.trial = trial
 		self.duration = duration
-	def score(self):
+		print duration
+	def normalScore(self):
 		return 5 * self.duration.seconds / 60 + 10 * self.trial + (datetime.datetime.now() - self.accepted).seconds / 86400
+	def acceptScore(self):
+		return self.accepted
 	def __str__(self):
 		return str(self.id) + ": " + self.title + "(" + str(self.duration.seconds / 60) + "/" + str(self.trial) + "/" + str((datetime.datetime.now() - self.accepted).seconds / 86400) + ")"
+	def json(self):
+		obj = {}
+		obj['id'] = self.id
+		obj['title'] = self.title
+		obj['difficulty'] = self.difficulty
+		obj['acceptance'] = self.acceptance
+		obj['description'] = self.description
+		obj['category'] = self.category
+		obj['language'] = self.language
+		obj['trial'] = self.trial
+		obj['duration'] = self.duration.__repr__()
+		obj['accepted'] = self.accepted.__repr__()
+		obj['sort'] = self.score.__name__
+		return obj
+	@staticmethod
+	def load(obj):
+		prob = LeetcodeProblem()
+		prob.id = obj['id']
+		prob.title = obj['title']
+		prob.difficulty = obj['difficulty']
+		prob.acceptance = obj['acceptance']
+		prob.description = obj['description']
+		prob.category = obj['category']
+		prob.language = obj['language']
+		prob.trial = obj['trial']
+		prob.duration = eval(obj['duration'])
+		prob.accepted = eval(obj['accepted'])
+		if obj['sort'] == 'normalScore':
+			prob.sort = prob.normalScore
+		elif obj['sort'] == 'acceptScore':
+			prob.sort = prob.acceptScore
+		return prob
 class Leetcode:
-	def __init__(self, jsonfile = None):
+	def __init__(self, jsonfile):
 		self.index = {}
-		if jsonfile:
+		try:
 			self.load(jsonfile)
-		else:
+		except:
 			conn = httplib.HTTPSConnection('leetcode.com')
 			conn.request("GET", "/problemset/algorithms/")
 			r = conn.getresponse()
@@ -60,49 +94,57 @@ class Leetcode:
 			m = re.search('<td>(\d+)</td>', msg)
 			msg = msg[m.end():]
 			while m:
-				id = int(m.group(1))
+				pid = int(m.group(1))
 				m = re.search('">(.*)</a>', msg)
 				title = m.group(1)
 				m = re.search('<td>(\d\d\.\d)%</td>', msg)
 				acceptance = float(m.group(1))
 				m = re.search("<td value='\d'>(\w+)</td>", msg)
 				difficulty = m.group(1)
-				prob = LeetcodeProblem(id, title, acceptance, difficulty)
+				prob = LeetcodeProblem()
+				prob.id = pid
+				prob.title = title
+				prob.acceptance = acceptance
+				prob.difficulty = difficulty
 				msg = msg[m.end():]
 				m = re.search('<td>(\d+)</td>', msg)
 				# in fact, it's possible to dig deeper for tag or description automatically
 		for prob in LeetcodeProblem.directory:
 			self.index[prob.id] = prob
 			self.index[prob.title] = prob
-	def reload(self, id):
-		conn = httplib.HTTPSConnection('leetcode.com')
-		conn.request("GET", "/problemset/algorithms/")
-		r = conn.getresponse()
-		msg = r.read()
-		m = re.search("<td>%d</td>" % id, msg)
-		msg = msg[m.end():]
-		m = re.search('">(.*)</a>', msg)
-		title = m.group(1)
-		m = re.search('<td>(\d\d\.\d)%</td>', msg)
-		acceptance = float(m.group(1))
-		m = re.search("<td value='\d'>(\w+)</td>", msg)
-		difficulty = m.group(1)
-		prob = LeetcodeProblem(id, title, acceptance, difficulty)
-		msg = msg[m.end():]
-		m = re.search('<td>(\d+)</td>', msg)
-		# in fact, it's possible to dig deeper for tag or description automatically
-		self.index[prob.id] = prob
-		self.index[prob.title] = prob
+	def extend(self, jsonfile = "db.json"):
+		with open(jsonfile, "r") as f:
+			directory = jsonpickle.decode(f.read())
+			index = {}
+			for d in directory:
+				index[d.id] = d
+			for prob in LeetcodeProblem.directory:
+				if prob.id in index:
+					# id, title, difficulty, acceptance
+					prob.description = index[prob.id].description
+					# category, language
+					prob.trial = index[prob.id].trial
+					prob.duration = index[prob.id].duration
+					if prob.duration == datetime.timedelta(hours=1):
+						prob.duration = datetime.timedelta(hours=24)
+					prob.accepted = index[prob.id].accepted
+					print prob.score
+
 	def load(self, jsonfile = "db.json"):
 		with open(jsonfile, "r") as f:
-			LeetcodeProblem.directory = jsonpickle.decode(f.read())
+			objs = json.load(f)
+			print len(objs)
+			LeetcodeProblem.directory = []
+			for obj in objs:
+				LeetcodeProblem.load(obj)
+			return True
+		return False
 	def save(self, jsonfile = "db.json"):
-		with open(jsonfile, "w") as f:
-			jstr = jsonpickle.encode(LeetcodeProblem.directory)
-			jobj = json.loads(jstr)
-			sys.stdout = f
-			print json.dumps(jobj, indent = 4)
-			sys.stdout = sys.__stdout__
+		with open(jsonfile, 'w') as f:
+			objs = []
+			for prob in LeetcodeProblem.directory:
+				objs.append(prob.json())
+			json.dump(objs, f, indent=4)
 	def sort(self, reverse = True):
 		LeetcodeProblem.directory.sort(key=lambda x : x.score(), reverse = reverse)
 	def start(self, prob):
@@ -166,14 +208,10 @@ class Leetcode:
 			return ver == 2
 		return ver == 1
 lc = None
-# add a field
-# map(lambda x : setattr(x, "duration", datetime.timedelta(hours = 1)), LeetcodeProblem.directory)
-# del a field
-# map(lambda x : delattr(x, "duration"), LeetcodeProblem.directory)
 
 def main():
 	p = argparse.ArgumentParser()
-	p.add_argument("-f", "--jsonfile", help="the database file", default='db.json')
+	p.add_argument("-f", "--jsonfile", help="the database file", default="db.json")
 	args = p.parse_args()
 	global lc
 	lc = Leetcode(args.jsonfile)

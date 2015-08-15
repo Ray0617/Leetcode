@@ -1,0 +1,3 @@
+["ab","cd"]
+["ab","cb","ad","bd","ac","ca","da","bc","db","adcb","dabc","abb","acb"]
+
