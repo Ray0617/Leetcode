@@ -7,6 +7,7 @@ import datetime
 import random
 import json
 
+# tested 10/04/2015
 # usage:
 # >>> lc.start("skyline")
 # ### try coding on leetcode
@@ -99,7 +100,7 @@ class Leetcode:
 				title = m.group(1)
 				m = re.search('<td>(\d\d\.\d)%</td>', msg)
 				acceptance = float(m.group(1))
-				m = re.search("<td value='\d'>(\w+)</td>", msg)
+				m = re.search("<td value='\d+.\d%'>(\w+)</td>", msg)
 				difficulty = m.group(1)
 				prob = LeetcodeProblem()
 				prob.id = pid
