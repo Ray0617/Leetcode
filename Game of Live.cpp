@@ -1,7 +1,6 @@
 class Solution {
 public:
     void gameOfLife(vector<vector<int>>& board) {
-        vector<vector<int>> cloned = board;
         int row = (int)board.size();
         if (row == 0)
             return;
@@ -13,22 +12,31 @@ public:
                     for (int y = j - 1; y <= j+1; y++) {
                         if (x == i && y == j)
                             continue;
-                        if (x >= 0 && x < row && y >= 0 && y < col && cloned[x][y])
+                        if (x >= 0 && x < row && y >= 0 && y < col && (board[x][y] & 1))
                             lives++;
                     }
                 }
-                if (cloned[i][j]) {
+                if (board[i][j] & 1) {
                     // live -> dead
                     if (lives < 2 || lives > 3)
-                        board[i][j] = 0;
+                        board[i][j] |= 2;
                 }
                 else {
                     // dead -> live
                     if (lives == 3)
+                        board[i][j] |= 2;
+                }
+            }
+        }
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (board[i][j] & 2) {
+                    if (board[i][j] & 1)
+                        board[i][j] = 0;
+                    else
                         board[i][j] = 1;
                 }
             }
         }
-        
     }
 };
