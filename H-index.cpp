@@ -1,11 +1,19 @@
 class Solution {
 public:
     int hIndex(vector<int>& citations) {
-        sort(citations.begin(), citations.end());
         int N = (int)citations.size();
-        for (int i = 0; i < N; i++) {
-            if (citations[i] >= N - i)
-                return N - i;
+        vector<int> count(N + 1);
+        for (auto citation : citations) {
+            if (citation >= N)
+                count[N]++;
+            else
+                count[citation]++;
+        }
+        int sum = 0;
+        for (int h = N; h >= 0; h--) {
+            sum += count[h];
+            if (sum >= h)
+                return h;
         }
         return 0;
     }
