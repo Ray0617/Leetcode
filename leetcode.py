@@ -113,6 +113,27 @@ class Leetcode:
 		for prob in LeetcodeProblem.directory:
 			self.index[prob.id] = prob
 			self.index[prob.title] = prob
+	def add(self, pid):
+		conn = httplib.HTTPSConnection('leetcode.com')
+		conn.request("GET", "/problemset/algorithms/")
+		r = conn.getresponse()
+		msg = r.read()
+		m = re.search('<td>' + str(pid) + '</td>', msg)
+		msg = msg[m.end():]
+		m = re.search('">(.*)</a>', msg)
+		title = m.group(1)
+		m = re.search('<td>(\d\d\.\d)%</td>', msg)
+		acceptance = float(m.group(1))
+		m = re.search("<td value='\d+.\d%'>(\w+)</td>", msg)
+		difficulty = m.group(1)
+		prob = LeetcodeProblem()
+		prob.id = pid
+		prob.title = title
+		prob.acceptance = acceptance
+		prob.difficulty = difficulty
+		self.index[prob.id] = prob
+		self.index[prob.title] = prob
+
 	def extend(self, jsonfile = "db.json"):
 		with open(jsonfile, "r") as f:
 			directory = jsonpickle.decode(f.read())

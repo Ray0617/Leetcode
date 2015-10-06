@@ -11,26 +11,20 @@ public:
     void connect(TreeLinkNode *root) {
         if (!root)
             return;
-        TreeLinkNode* prevLevel = root;
-        TreeLinkNode* thisLevel = root->left;
-        while (thisLevel) {
-            TreeLinkNode* prev = 0;
-            TreeLinkNode* node = prevLevel;
-            while (node) {
-                if (node->left) {
-                    if (prev) {
-                        prev->next = node->left;
-                    }
-                    prev = node->left;
-                    if (node->right) {
-                        prev->next = node->right;
-                        prev = node->right;
-                    }
-                }
+        TreeLinkNode* pre_level = root;
+        while (pre_level->left) {
+            TreeLinkNode* pre_node = pre_level;
+            TreeLinkNode superhead(0);
+            TreeLinkNode* node = &superhead;
+            while (pre_node) {
+                node->next = pre_node->left;
                 node = node->next;
+                node->next = pre_node->right;
+                node = node->next;
+                pre_node = pre_node->next;
             }
-            prevLevel = thisLevel;
-            thisLevel = thisLevel->left;
+            pre_level = pre_level->left;
         }
     }
 };
+

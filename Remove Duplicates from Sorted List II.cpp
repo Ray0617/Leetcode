@@ -8,31 +8,27 @@
  */
 class Solution {
 public:
-    ListNode *deleteDuplicates(ListNode *head) {
-        // prev -> node -> next
+    ListNode* deleteDuplicates(ListNode* head) {
         if (!head)
-            return 0;
-        int pre_val = head->val - 1;
-        ListNode* node = head;
-        head = 0;
-        ListNode* prev = 0;
-        while (node) {
-            if (node->val != pre_val && (!node->next || node->next->val != node->val)) {
-                // this is an unique node
-                if (!head)
-                    head = node;
-                prev = node;
+            return nullptr;
+        ListNode superhead(0);
+        ListNode* tail = &superhead;
+        ListNode* check = head;
+        while (check) {
+            ListNode* node = check;
+            int count = 0;
+            while (node && node->val == check->val) {
+                count++;
                 node = node->next;
             }
-            else {
-                // this node should be removed
-                pre_val = node->val;
-                if (prev) {
-                    prev->next = node->next;
-                }
-                node = node->next;
+            if (count == 1) {
+                tail->next = check;
+                tail = check;
             }
+            check = node;
         }
-        return head;
+        tail->next = nullptr;
+        return superhead.next;
     }
 };
+
