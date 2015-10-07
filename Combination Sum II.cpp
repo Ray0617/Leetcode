@@ -1,43 +1,30 @@
 class Solution {
 public:
-    void combinationSum2(const vector<int>& tail, const vector<int>& num, int target, vector<vector<int> >& result) {
+    void combinationSum2(vector<int>& candidates, int start, int target, vector<int>& solution, vector<vector<int>>& result) {
         if (target == 0) {
-            vector<int> reverse;
-            for (int i = (int)tail.size() - 1; i >= 0; i--) {
-                reverse.push_back(tail[i]);
-            }
-            result.push_back(reverse);
+            result.push_back(solution);
             return;
         }
-        vector<int> candidates;
-        int sum = 0;
-        for (int i = 0; i< num.size(); i++) {
-            if (num[i] > target)
-                break;
-            sum += num[i];
-            candidates.push_back(num[i]);
-        }
-        if (sum < target)
+        if (start >= candidates.size())
             return;
-        
-        int last = candidates.back();
-        candidates.pop_back();
-        vector<int> chosen = tail;
-        //select at least one last
-        chosen.push_back(last);
-        combinationSum2(chosen, candidates, target - last, result);
-        // not select last at all
-        chosen.pop_back();
-        while (!candidates.empty() && candidates.back() == last) {
-            candidates.pop_back();
+        if (candidates[start] > target)
+            return;
+        int count = 0;
+        while (start + count < candidates.size() && candidates[start] == candidates[start + count])
+            count++;
+        for (int i = 0; i <= count; i++) {
+            combinationSum2(candidates, start + count, target - i * candidates[start], solution, result);
+            if (i != count)
+                solution.push_back(candidates[start]);
         }
-        combinationSum2(chosen, candidates, target, result);
+        solution.resize(solution.size() - count);
     }
-    vector<vector<int> > combinationSum2(vector<int> &num, int target) {
-        sort(num.begin(), num.end());
-        vector<vector<int> > ret;
-        vector<int> chosen;
-        combinationSum2(chosen, num, target, ret);
-        return ret;
+    vector<vector<int>> combinationSum2(vector<int>& candidates, int target) {
+        vector<vector<int>> result;
+        vector<int> solution;
+        sort(candidates.begin(), candidates.end());
+        combinationSum2(candidates, 0, target, solution, result);
+        return result;
     }
 };
+
